@@ -1,0 +1,51 @@
+pipeline {
+    agent any
+
+    environment {
+        SERVER_IP = "18.144.238.204"
+        SSH_USER = "ubuntu"
+        DEPLOY_PATH = "/var/www/html"
+        REPO = "https://github.com/divyesh2123/ExampleDeploymentofReact.git"
+    }
+
+    stages {
+
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: "${REPO}"
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build React App') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Deploy to Apache Server') {
+            steps {
+                sh """
+                ssh ${SSH_USER}@${SERVER_IP} '
+                    sudo rm -rf ${DEPLOY_PATH}/*'
+                
+                scp -r dist/* ${SSH_USER}@${SERVER_IP}:${DEPLOY_PATH}/
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment Successful 🚀"
+        }
+        failure {
+            echo "Deployment Failed ❌"
+        }
+    }
+}
