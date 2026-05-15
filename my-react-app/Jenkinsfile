@@ -35,8 +35,17 @@ pipeline {
         stage('Deploy to Apache Server') {
             steps {
                 sh """
-                ssh ${SSH_USER}@${SERVER_IP} 'sudo rm -rf ${DEPLOY_PATH}/*'
-                scp -r my-react-app/dist/* ${SSH_USER}@${SERVER_IP}:${DEPLOY_PATH}/
+                ssh ${SSH_USER}@${SERVER_IP} '
+                    sudo rm -rf /var/www/html/* &&
+                    mkdir -p /tmp/react-build
+                '
+
+                scp -r my-react-app/dist/* ${SSH_USER}@${SERVER_IP}:/tmp/react-build/
+
+                ssh ${SSH_USER}@${SERVER_IP} '
+                    sudo cp -r /tmp/react-build/* /var/www/html/ &&
+                    sudo rm -rf /tmp/react-build
+                '
                 """
             }
         }
